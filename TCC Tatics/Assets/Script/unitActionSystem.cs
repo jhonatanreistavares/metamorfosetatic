@@ -1,15 +1,26 @@
 using UnityEngine;
+using System;
 
-public class unitActionSystem : MonoBehaviour
+public class UnitActionSystem : MonoBehaviour
 {
+
+    public static UnitActionSystem Instance{get; private set; }
+    public event EventHandler OnSelectedUnitChanged;
     [SerializeField] private Unit selectedUnit;
     [SerializeField] private LayerMask unitLayerMask;
 
-
+    private void Awake()
+    {
+       if (Instance != null)
+       {
+            Debug.LogError("Tem mais de uma UnitActionSystem!"+ transform + "-" + Instance);
+            Destroy(gameObject);
+            return;
+       }
+       Instance = this;
+    }
     private void Update()
     {
-        
-
         if(Input.GetMouseButtonDown(0))
         {
             if(TryHandleUnitSelection()) return;
@@ -28,11 +39,20 @@ public class unitActionSystem : MonoBehaviour
             //utilizando o TryGetComponent conseguimos identificar os coliders das unidades em jogo utilizando uma layer e um collider
             if(raycastHit.transform.TryGetComponent<Unit>(out Unit unit))
             {
-                selectedUnit = unit;
+                SetSelectedUnit(unit);
                 return true;
             }
         }
         return false;
     }
-    
+
+    private void SetSelectedUnit(Unit unit)
+    {
+        selectedUnit = unit;
+        OnSelectedUnitChanged?.Invoke(this, EventArgs.Empty);
+    }
+    public Unit GetSelectedUnit()
+    {
+        return selectedUnit;
+    }
 }
